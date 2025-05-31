@@ -23,6 +23,8 @@ jobs:
       run: pip install requests
 
     - name: Run script
+      env:
+        OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
       run: python queue_times.py
 
     - name: Commit and push SQLite DB
