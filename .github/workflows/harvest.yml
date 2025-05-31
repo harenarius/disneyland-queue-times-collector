@@ -2,8 +2,9 @@ name: Harvest Queue Times
 
 on:
   schedule:
-    - cron: '*/30 15-6 * * *'  # every 30 mins from 8am–11pm PT (converted to UTC)
-  workflow_dispatch:  # allows manual runs from GitHub
+    - cron: '*/30 15-23 * * *'  # 8am–3pm PT
+    - cron: '*/30 0-6 * * *'    # 4pm–11pm PT
+  workflow_dispatch:
 
 jobs:
   run-script:
