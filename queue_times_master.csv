@@ -291,4 +291,86 @@ timestamp,park,land,ride,wait_time
 2025-05-31T15:29:39.845768,california_adventure,Pixar Pier,Pixar Pal-A-Round – Non-Swinging,15
 2025-05-31T15:29:39.845768,california_adventure,Pixar Pier,Toy Story Midway Mania!,50
 2025-05-31T15:29:39.845768,california_adventure,San Fransokyo Square,The Bakery Tour,0
->>>>>>> 8773d15 (Add updated queue_times_master.csv from local run),,,,
+>>>>>>> 8773d15 (Add updated queue_times_master.csv from local run),,,,2025-05-31T22:45:56.023173,disneyland,Adventureland,Adventureland Treehouse inspired by Walt Disney’s Swiss Family Robinson,0
+2025-05-31T22:45:56.023173,disneyland,Adventureland,Indiana Jones™ Adventure,60
+2025-05-31T22:45:56.023173,disneyland,Adventureland,Jungle Cruise,20
+2025-05-31T22:45:56.023173,disneyland,Adventureland,Walt Disney's Enchanted Tiki Room,0
+2025-05-31T22:45:56.023173,disneyland,Bayou Country,Davy Crockett's Explorer Canoes,10
+2025-05-31T22:45:56.023173,disneyland,Bayou Country,The Many Adventures of Winnie the Pooh,20
+2025-05-31T22:45:56.023173,disneyland,Bayou Country,Tiana's Bayou Adventure,120
+2025-05-31T22:45:56.023173,disneyland,Bayou Country,Tiana's Bayou Adventure Single Rider,0
+2025-05-31T22:45:56.023173,disneyland,Fantasyland,"""it's a small world""",10
+2025-05-31T22:45:56.023173,disneyland,Fantasyland,Alice in Wonderland,20
+2025-05-31T22:45:56.023173,disneyland,Fantasyland,Casey Jr. Circus Train,5
+2025-05-31T22:45:56.023173,disneyland,Fantasyland,Dumbo the Flying Elephant,15
+2025-05-31T22:45:56.023173,disneyland,Fantasyland,King Arthur Carrousel,5
+2025-05-31T22:45:56.023173,disneyland,Fantasyland,Mad Tea Party,5
+2025-05-31T22:45:56.023173,disneyland,Fantasyland,Matterhorn Bobsleds,0
+2025-05-31T22:45:56.023173,disneyland,Fantasyland,Meet Disney Princesses at Royal Hall,10
+2025-05-31T22:45:56.023173,disneyland,Fantasyland,Mr. Toad's Wild Ride,15
+2025-05-31T22:45:56.023173,disneyland,Fantasyland,Peter Pan's Flight,25
+2025-05-31T22:45:56.023173,disneyland,Fantasyland,Pinocchio's Daring Journey,10
+2025-05-31T22:45:56.023173,disneyland,Fantasyland,Sleeping Beauty Castle Walkthrough,0
+2025-05-31T22:45:56.023173,disneyland,Fantasyland,Snow White's Enchanted Wish,15
+2025-05-31T22:45:56.023173,disneyland,Fantasyland,Storybook Land Canal Boats,5
+2025-05-31T22:45:56.023173,disneyland,Frontierland,Big Thunder Mountain Railroad,0
+2025-05-31T22:45:56.023173,disneyland,Frontierland,Frontierland Shootin' Exposition,0
+2025-05-31T22:45:56.023173,disneyland,Frontierland,Mark Twain Riverboat,0
+2025-05-31T22:45:56.023173,disneyland,Frontierland,Pirate's Lair on Tom Sawyer Island,5
+2025-05-31T22:45:56.023173,disneyland,Frontierland,Sailing Ship Columbia,0
+2025-05-31T22:45:56.023173,disneyland,Main Street U.S.A,Disneyland Railroad,10
+2025-05-31T22:45:56.023173,disneyland,Main Street U.S.A,Main Street Cinema,0
+2025-05-31T22:45:56.023173,disneyland,Main Street U.S.A,Main Street Vehicles,0
+2025-05-31T22:45:56.023173,disneyland,Main Street U.S.A,The Disney Gallery,0
+2025-05-31T22:45:56.023173,disneyland,Main Street U.S.A,The Disneyland Story presenting Great Moments with Mr. Lincoln,0
+2025-05-31T22:45:56.023173,disneyland,Mickey's Toontown,Chip 'n' Dale's GADGETcoaster,0
+2025-05-31T22:45:56.023173,disneyland,Mickey's Toontown,Donald's Duck Pond,0
+2025-05-31T22:45:56.023173,disneyland,Mickey's Toontown,Goofy's How-to-Play Yard,0
+2025-05-31T22:45:56.023173,disneyland,Mickey's Toontown,Mickey & Minnie's Runaway Railway,45
+2025-05-31T22:45:56.023173,disneyland,Mickey's Toontown,Mickey's House and Meet Mickey Mouse,15
+2025-05-31T22:45:56.023173,disneyland,Mickey's Toontown,Mickey's House and Meet Mickey Mouse,0
+2025-05-31T22:45:56.023173,disneyland,Mickey's Toontown,Minnie's House,0
+2025-05-31T22:45:56.023173,disneyland,Mickey's Toontown,Roger Rabbit's Car Toon Spin,45
+2025-05-31T22:45:56.023173,disneyland,New Orleans Square,Haunted Mansion,40
+2025-05-31T22:45:56.023173,disneyland,New Orleans Square,Pirates of the Caribbean,25
+2025-05-31T22:45:56.023173,disneyland,Star Wars: Galaxy's Edge,Millennium Falcon: Smugglers Run,15
+2025-05-31T22:45:56.023173,disneyland,Star Wars: Galaxy's Edge,Millennium Falcon: Smugglers Run Single Rider,0
+2025-05-31T22:45:56.023173,disneyland,Star Wars: Galaxy's Edge,Star Wars: Rise of the Resistance,50
+2025-05-31T22:45:56.023173,disneyland,Tomorrowland,Astro Orbitor,10
+2025-05-31T22:45:56.023173,disneyland,Tomorrowland,Autopia,10
+2025-05-31T22:45:56.023173,disneyland,Tomorrowland,Buzz Lightyear Astro Blasters,10
+2025-05-31T22:45:56.023173,disneyland,Tomorrowland,Disneyland Monorail,5
+2025-05-31T22:45:56.023173,disneyland,Tomorrowland,Finding Nemo Submarine Voyage,15
+2025-05-31T22:45:56.023173,disneyland,Tomorrowland,Space Mountain,15
+2025-05-31T22:45:56.023173,disneyland,Tomorrowland,Star Tours - The Adventures Continue,15
+2025-05-31T22:45:56.198414,california_adventure,Avengers Campus,Guardians of the Galaxy - Mission: BREAKOUT!,70
+2025-05-31T22:45:56.198414,california_adventure,Avengers Campus,WEB SLINGERS: A Spider-Man Adventure,55
+2025-05-31T22:45:56.198414,california_adventure,Avengers Campus,WEB SLINGERS: A Spider-Man Adventure Single Rider,0
+2025-05-31T22:45:56.198414,california_adventure,Cars Land,Luigi's Rollickin' Roadsters,35
+2025-05-31T22:45:56.198414,california_adventure,Cars Land,Mater's Junkyard Jamboree,25
+2025-05-31T22:45:56.198414,california_adventure,Cars Land,Radiator Springs Racers,0
+2025-05-31T22:45:56.198414,california_adventure,Cars Land,Radiator Springs Racers Single Rider,0
+2025-05-31T22:45:56.198414,california_adventure,Grizzly Peak,Grizzly River Run,0
+2025-05-31T22:45:56.198414,california_adventure,Grizzly Peak,Redwood Creek Challenge Trail,0
+2025-05-31T22:45:56.198414,california_adventure,Grizzly Peak,Soarin' Around the World,90
+2025-05-31T22:45:56.198414,california_adventure,Hollywood Land,Animation Academy,0
+2025-05-31T22:45:56.198414,california_adventure,Hollywood Land,Mickey's PhilharMagic,10
+2025-05-31T22:45:56.198414,california_adventure,Hollywood Land,"Monsters, Inc. Mike & Sulley to the Rescue!",45
+2025-05-31T22:45:56.198414,california_adventure,Hollywood Land,Sorcerer's Workshop,0
+2025-05-31T22:45:56.198414,california_adventure,Hollywood Land,Turtle Talk with Crush,0
+2025-05-31T22:45:56.198414,california_adventure,Paradise Gardens Park,Golden Zephyr,10
+2025-05-31T22:45:56.198414,california_adventure,Paradise Gardens Park,Goofy's Sky School,45
+2025-05-31T22:45:56.198414,california_adventure,Paradise Gardens Park,Silly Symphony Swings,15
+2025-05-31T22:45:56.198414,california_adventure,Paradise Gardens Park,Silly Symphony Swings Single Rider,0
+2025-05-31T22:45:56.198414,california_adventure,Paradise Gardens Park,The Little Mermaid - Ariel's Undersea Adventure,20
+2025-05-31T22:45:56.198414,california_adventure,Paradise Gardens Park,World of Color – ONE,0
+2025-05-31T22:45:56.198414,california_adventure,Pixar Pier,Games of Pixar Pier,5
+2025-05-31T22:45:56.198414,california_adventure,Pixar Pier,Incredicoaster,100
+2025-05-31T22:45:56.198414,california_adventure,Pixar Pier,Incredicoaster Single Rider,0
+2025-05-31T22:45:56.198414,california_adventure,Pixar Pier,Inside Out Emotional Whirlwind,15
+2025-05-31T22:45:56.198414,california_adventure,Pixar Pier,Jessie's Critter Carousel,5
+2025-05-31T22:45:56.198414,california_adventure,Pixar Pier,Jumpin' Jellyfish,20
+2025-05-31T22:45:56.198414,california_adventure,Pixar Pier,Pixar Pal-A-Round - Swinging,25
+2025-05-31T22:45:56.198414,california_adventure,Pixar Pier,Pixar Pal-A-Round – Non-Swinging,15
+2025-05-31T22:45:56.198414,california_adventure,Pixar Pier,Toy Story Midway Mania!,70
+2025-05-31T22:45:56.198414,california_adventure,San Fransokyo Square,The Bakery Tour,0
