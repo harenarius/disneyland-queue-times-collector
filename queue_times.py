@@ -1,8 +1,9 @@
 import requests
 import sqlite3
-from datetime import datetime
+from datetime import datetime, date
 import os
 from dotenv import load_dotenv
+import holidays
 
 # Load .env variables
 load_dotenv()
@@ -17,6 +18,12 @@ WEATHER_URL = "https://api.openweathermap.org/data/2.5/weather"
 API_KEY = os.getenv("OPENWEATHER_API_KEY")
 LOCATION = {"lat": 33.8121, "lon": -117.9190}  # Anaheim, CA
 
+# Holiday check
+us_holidays = holidays.US()
+today = date.today()
+is_today_holiday = today in us_holidays
+holiday_name = us_holidays.get(today) if is_today_holiday else None
+
 def fetch_ride_data(park_name, park_id):
     url = f"https://queue-times.com/parks/{park_id}/queue_times.json"
     response = requests.get(url)
@@ -30,7 +37,8 @@ def fetch_ride_data(park_name, park_id):
                 park_name,
                 land["name"],
                 ride["name"],
-                ride["wait_time"]
+                ride["wait_time"],
+                int(is_today_holiday)
             ))
     return output
 
@@ -59,7 +67,8 @@ def create_tables(conn):
             park TEXT,
             land TEXT,
             ride TEXT,
-            wait_time INTEGER
+            wait_time INTEGER,
+            is_holiday INTEGER
         )
     """)
     conn.execute("""
@@ -71,12 +80,18 @@ def create_tables(conn):
             wind_speed REAL
         )
     """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS holidays (
+            date TEXT PRIMARY KEY,
+            name TEXT
+        )
+    """)
     conn.commit()
 
 def insert_ride_data(conn, ride_data):
     conn.executemany("""
-        INSERT INTO queue_times (timestamp, park, land, ride, wait_time)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO queue_times (timestamp, park, land, ride, wait_time, is_holiday)
+        VALUES (?, ?, ?, ?, ?, ?)
     """, ride_data)
 
 def insert_weather_data(conn, weather_row):
@@ -85,9 +100,19 @@ def insert_weather_data(conn, weather_row):
         VALUES (?, ?, ?, ?, ?)
     """, weather_row)
 
+def insert_holiday(conn):
+    if is_today_holiday:
+        conn.execute("""
+            INSERT OR IGNORE INTO holidays (date, name)
+            VALUES (?, ?)
+        """, (today.isoformat(), holiday_name))
+
 def main():
     conn = sqlite3.connect(DB_NAME)
     create_tables(conn)
+
+    # Insert holiday metadata
+    insert_holiday(conn)
 
     # Pull and insert ride data
     all_ride_data = []
@@ -104,6 +129,8 @@ def main():
     conn.close()
 
     print(f"Inserted {len(all_ride_data)} ride rows and 1 weather row into {DB_NAME}")
+    if is_today_holiday:
+        print(f"Marked today as a holiday: {holiday_name}")
 
 if __name__ == "__main__":
     main()
