@@ -6,4 +6,3 @@ dist/
 build/
 .DS_Store
 .ipynb_checkpoints/
-queue_times.db
