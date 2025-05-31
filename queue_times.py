@@ -5,7 +5,7 @@ from datetime import datetime
 
 PARKS = {
     "disneyland": 16,
-    "california_adventure": 67
+    "california_adventure": 17
 }
 
 def fetch_ride_data(park_name, park_id):
