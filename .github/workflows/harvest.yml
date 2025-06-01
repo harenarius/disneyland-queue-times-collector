@@ -43,15 +43,9 @@ jobs:
       with:
         python-version: "3.x"
 
-    - name: Install dependencies
-      run: |
-        pip install -q \
-          requests \
-          python-dotenv \
-          pandas \
-          scikit-learn \
-          joblib \
-          holidays
+    - name: Install dependencies #use the same Python that was set up
+      run: python -m pip install -r requirements.txt
+        
 
     # 4️⃣  Run the harvester (this updates queue_times.db)
     - name: Harvest queue‑time data
