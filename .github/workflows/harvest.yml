@@ -2,51 +2,61 @@ name: Harvest Queue Times
 
 on:
   schedule:
-    - cron: '*/30 15-23 * * *'  # 8am–3pm PT
-    - cron: '*/30 0-6 * * *'    # 4pm–11pm PT
+    - cron: '*/30 15-23 * * *'   # 08:00‑15:30 PT
+    - cron: '*/30 0-6 * * *'     # 16:00‑23:30 PT
   workflow_dispatch:
 
+# 🛑 1 job at a time touches the DB
+concurrency:
+  group: queue-times-db
+  cancel-in-progress: true
+
 jobs:
-  run-script:
+  harvest:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Check out code
+    # 1️⃣ Pull the dedicated branch with full history
+    - name: Check out binary‑db‑updates
       uses: actions/checkout@v3
       with:
-        fetch-depth: 0  # REQUIRED: allows history for rebase
+        fetch-depth: 0
+        ref: binary-db-updates
+
+    # (optional) Fast‑forward the code to match main
+    - name: Sync code from main
+      run: |
+        git fetch origin main
+        git merge --ff-only origin/main || echo "::warning ::main diverged; keeping branch version"
 
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.x'
 
-    - name: Install dependencies
-      run: pip install requests python-dotenv pandas scikit-learn joblib holidays
+    - name: Install deps
+      run: pip install -q requests python-dotenv pandas scikit-learn joblib holidays
 
-    - name: Run queue_times.py
+    # 2️⃣ Run the script *on this branch* so the DB file changes here
+    - name: Harvest queue times
       env:
         OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
       run: python queue_times.py
 
-    - name: Set up Git config
+    - name: Configure Git author
       run: |
-        git config --global user.name "github-actions[bot]"
-        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git config user.name  "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-    - name: Fetch & rebase binary-db-updates
-      run: |
-        git fetch origin binary-db-updates
-        git checkout binary-db-updates || git checkout -b binary-db-updates
-        git rebase origin/binary-db-updates || echo "Nothing to rebase"
-
-    - name: Copy updated DB from main
-      run: git checkout main -- queue_times.db
-
+    # 3️⃣ Commit if anything actually changed
     - name: Commit DB update
       run: |
         git add queue_times.db
-        git commit -m "Update SQLite DB: $(date -u +'%Y-%m-%d %H:%M:%S') UTC" || echo "No changes to commit"
+        git diff --cached --quiet && { echo "No DB delta ↪ skipping commit"; exit 0; }
+        git commit -m "Update SQLite DB: $(date -u +'%Y-%m-%d %H:%M:%S') UTC"
 
-    - name: Push updated DB
-      run: git push origin binary-db-updates || echo "Push failed"
+    # 4️⃣ Re‑pull & push (handles rare race where a previous job finished **just** now)
+    - name: Rebase & push
+      run: |
+        git pull --rebase --autostash origin binary-db-updates
+        git push --force-with-lease origin HEAD:binary-db-updates
