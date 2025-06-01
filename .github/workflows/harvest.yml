@@ -13,6 +13,8 @@ jobs:
     steps:
     - name: Check out code
       uses: actions/checkout@v3
+      with:
+        fetch-depth: 0  # Enables rebase and full history
 
     - name: Set up Python
       uses: actions/setup-python@v5
@@ -27,14 +29,25 @@ jobs:
         OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
       run: python queue_times.py
 
-    - name: Commit and push SQLite DB
+    - name: Configure Git
       run: |
-        git config user.name "github-actions[bot]"
-        git config user.email "github-actions[bot]@users.noreply.github.com"
-        git update-index --force-remove queue_times.db
-        git add -f queue_times.db
-        git commit -m "Update SQLite DB: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" || echo "No changes to commit"
-        git push origin HEAD:binary-db-updates
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+    - name: Pull latest binary-db-updates with rebase
+      run: |
+        git fetch origin binary-db-updates
+        git checkout binary-db-updates || git checkout -b binary-db-updates
+        git pull origin binary-db-updates --rebase || echo "No rebase needed"
+
+    - name: Commit DB update
+      run: |
+        git add queue_times.db
+        git commit -m "Update SQLite DB: $(date -u +'%Y-%m-%d %H:%M:%S') UTC" || echo "No changes to commit"
+
+    - name: Push updated DB to binary-db-updates branch
+      run: |
+        git push origin binary-db-updates || echo "Push failed"
 
     - name: Retrain model if new data is present
       run: python retrain_if_new_data.py
