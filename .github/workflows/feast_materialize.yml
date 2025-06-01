@@ -38,7 +38,7 @@ jobs:
           python-version: "3.11"
           cache: "poetry"
 
-      # 5️⃣  Install deps via Poetry (module form)
+      # 5️⃣  Install deps via Poetry
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip poetry
