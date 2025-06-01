@@ -1,18 +1,19 @@
 from datetime import timedelta
 
-from feast import Entity, FeatureView, Field, FileSource  # ← FileSource lives here
+from feast import (Entity, FeatureView, Field,  # ← FileSource lives here
+                   FileSource)
 from feast.types import Float32, Int32
 
 # ---------- raw hourly sources ----------
 QUEUE_RAW = FileSource(
     name="queue_raw",
-    path="data/raw/*/*.parquet",  # hourly parts
+    path="../data/raw/*/*.parquet",  # hourly parts
     timestamp_field="timestamp",
 )
 
 WEATHER_RAW = FileSource(
     name="weather_raw",
-    path="data/raw/weather_*.parquet",
+    path="../data/raw/weather_*.parquet",
     timestamp_field="timestamp",
 )
 
