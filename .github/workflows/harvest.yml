@@ -20,7 +20,7 @@ jobs:
         python-version: '3.x'
 
     - name: Install dependencies
-      run: pip install requests python-dotenv pandas scikit-learn joblib
+      run: pip install requests python-dotenv pandas scikit-learn joblib holidays
 
     - name: Run queue_times.py
       env:
