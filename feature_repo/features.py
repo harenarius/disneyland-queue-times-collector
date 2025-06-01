@@ -1,28 +1,25 @@
 from feast import Entity, FeatureView, Field, FileSource
-from feast.data_format import ParquetFormat
 from feast.types import Float32, Int32
 from datetime import timedelta
 
-# ✅ Hive partitioning only for ride-wait data
-queue_format = ParquetFormat(hive_partitioning=True)
-
+# ── File sources ──────────────────────────────────────────────
 QUEUE_RAW = FileSource(
     name="queue_raw",
-    # match only the ride-wait parquet *files*
-    path="../data/raw/*.parquet/park=*/*.parquet",
+    path="../data/raw/*.parquet/park=*/*.parquet",   # ride-wait files only
     timestamp_field="timestamp",
-    file_format=queue_format,
+    hive_partitioning=True,                          # ← tell Feast about park=…
 )
 
-# ✅ Weather files are *not* hive-partitioned, so no ParquetFormat here
 WEATHER_RAW = FileSource(
     name="weather_raw",
-    path="../data/raw/weather_*.parquet",
+    path="../data/raw/weather_*.parquet",            # weather files (no hive)
     timestamp_field="timestamp",
 )
 
+# ── entity ────────────────────────────────────────────────────
 ride = Entity(name="ride_id", join_keys=["ride_id"])
 
+# ── feature view ──────────────────────────────────────────────
 queue_weather_hourly = FeatureView(
     name="queue_weather_hourly",
     entities=[ride],
