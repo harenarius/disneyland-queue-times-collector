@@ -5,14 +5,14 @@ from datetime import timedelta
 # ── File sources ──────────────────────────────────────────────
 QUEUE_RAW = FileSource(
     name="queue_raw",
-    path="../data/raw/*.parquet/park=*/*.parquet",   # ride-wait files only
+    path="../data/raw/*.parquet/park=*/*.parquet",   # ride-wait parts
     timestamp_field="timestamp",
-    hive_partitioning=True,                          # ← tell Feast about park=…
+    # ← remove hive_partitioning, leave everything else
 )
 
 WEATHER_RAW = FileSource(
     name="weather_raw",
-    path="../data/raw/weather_*.parquet",            # weather files (no hive)
+    path="../data/raw/weather_*.parquet",
     timestamp_field="timestamp",
 )
 
