@@ -34,6 +34,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+          cache: "poetry"
 
       # 4️⃣  Install deps via Poetry
       - name: Install dependencies
@@ -42,12 +43,11 @@ jobs:
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
           poetry install --no-root
 
-      # 5️⃣  Apply + materialize Feast (run inside feature_repo)
+      # 5️⃣  Apply + materialize Feast
       - name: Feast apply & materialize
         run: |
-          cd feature_repo
-          poetry run feast apply
-          poetry run feast materialize-incremental $(date -u +"%Y-%m-%dT%H:%M:%S")
+          poetry run feast -c feature_repo apply
+          poetry run feast -c feature_repo materialize-incremental $(date -u +"%Y-%m-%dT%H:%M:%S")
 
       # 6️⃣  Commit updated registry, if any
       - name: Commit registry update
