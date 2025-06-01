@@ -1,0 +1,9 @@
+project: disney_queues
+registry: data/feature_registry.db      # auto-created SQLite
+provider: local
+offline_store:
+  type: file
+online_store:
+  type: redis       # disabled for now; materialise() just targets offline
+  connection_string: "redis://localhost:6379"
+entity_key_serialization_version: 2
