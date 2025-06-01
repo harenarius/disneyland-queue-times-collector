@@ -17,7 +17,7 @@ URL = (
     f"&appid={API_KEY}"
 )
 HEADERS = {"User-Agent": "DLQueueTimes/0.1 (contact: you@example.com)"}
-DATA_DIR = Path("data/raw")
+DATA_DIR = Path("data/weather")
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 app = typer.Typer(add_completion=False)
 
