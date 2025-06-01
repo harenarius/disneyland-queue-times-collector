@@ -4,7 +4,7 @@ from datetime import timedelta
 
 QUEUE_RAW = FileSource(
     name="queue_raw",
-    path="../data/raw/**/*.parquet",    # <- recursive to part files
+    path="../data/raw/*.parquet/park=*/part*.parquet",   # ← matches the files
     timestamp_field="timestamp",
 )
 
@@ -26,5 +26,5 @@ queue_weather_hourly = FeatureView(
         Field(name="precip_prob",  dtype=Int32),
     ],
     online=False,
-    source=QUEUE_RAW,                     # minimal MVP
+    source=QUEUE_RAW,
 )
