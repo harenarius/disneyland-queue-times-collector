@@ -1,0 +1,54 @@
+name: Feast Materialize
+
+on:
+  schedule:
+    - cron: "40 10 * * *"     # 03:40 PT nightly, after roll-up
+  workflow_dispatch:
+
+concurrency:
+  group: feast-materialize
+  cancel-in-progress: true
+
+jobs:
+  materialize:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣  Check out the data branch
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: binary-db-updates
+
+      # 2️⃣  Bring in the latest code from main
+      - name: Merge main
+        run: |
+          git fetch origin main
+          git merge -X theirs --no-edit origin/main
+
+      # 3️⃣  Set up Python
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # 4️⃣  Install deps via Poetry
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip poetry
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          poetry install --no-root
+
+      # 5️⃣  Apply + materialize Feast (run inside feature_repo)
+      - name: Feast apply & materialize
+        run: |
+          cd feature_repo
+          poetry run feast apply
+          poetry run feast materialize-incremental $(date -u +"%Y-%m-%dT%H:%M:%S")
+
+      # 6️⃣  Commit updated registry, if any
+      - name: Commit registry update
+        run: |
+          git add data/feature_registry.db
+          git diff --cached --quiet && { echo "No registry change – skipping commit"; exit 0; }
+          git commit -m "feat: nightly Feast materialization $(date -u +'%Y-%m-%d')"
+          git push --force-with-lease origin HEAD:binary-db-updates
