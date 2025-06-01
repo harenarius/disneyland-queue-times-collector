@@ -4,13 +4,13 @@ from datetime import timedelta
 
 QUEUE_RAW = FileSource(
     name="queue_raw",
-    path="../data/raw/*.parquet/park=*/part*.parquet",   # ← matches the files
+    path="../data/raw",          # ← just the directory
     timestamp_field="timestamp",
 )
 
 WEATHER_RAW = FileSource(
     name="weather_raw",
-    path="../data/raw/weather_*.parquet",
+    path="../data/raw",          # same directory; we’ll filter later
     timestamp_field="timestamp",
 )
 
