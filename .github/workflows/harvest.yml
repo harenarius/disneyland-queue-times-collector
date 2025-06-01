@@ -27,7 +27,7 @@ jobs:
     - name: Sync branch with main (FF only)
       run: |
         git fetch origin main
-        git merge --ff-only origin/main || echo "::warning ::main has diverged; leaving branch as‑is"
+        git merge --no-edit origin/main
 
     # 3️⃣  Set up Python 3.11 (matches local dev)
     - name: Set up Python
