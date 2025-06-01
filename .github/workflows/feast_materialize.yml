@@ -52,7 +52,7 @@ jobs:
       # 7️⃣  Commit registry update (if any)
       - name: Commit registry update
         run: |
-          git add data/feature_registry.db
+          git add feature_repo/data/feature_registry.db
           git diff --cached --quiet && { echo "No registry change – skipping commit"; exit 0; }
           git commit -m "feat: nightly Feast materialization $(date -u +'%Y-%m-%d')"
           git push --force-with-lease origin HEAD:binary-db-updates
