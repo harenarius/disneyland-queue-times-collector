@@ -1,7 +1,7 @@
 name: Harvest Queue Times
 
 on:
-  # every 30 min while the parks are roughly open (cron = UTC)
+  # Every 30 min while the parks are roughly open (cron = UTC)
   schedule:
     - cron: "*/30 15-23 * * *"   # 08:00‑15:30 PT
     - cron: "*/30 0-6  * * *"    # 17:00‑23:30 PT
@@ -16,52 +16,52 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # 1️⃣  Start on the branch that stores binary data
-    - name: Check out binary‑db‑updates
-      uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
-        ref: binary-db-updates
+      # 1️⃣  Check out the data branch
+      - name: Check out binary‑db‑updates
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: binary-db-updates
 
-    # 2️⃣  Optionally fast‑forward its code to match main
-    - name: Sync branch with main (FF only)
-      run: |
-        git fetch origin main
-        git merge --no-edit origin/main
+      # 2️⃣  Configure Git author (needed for the upcoming merge commit)
+      - name: Configure Git
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-    # 3️⃣  Set up Python 3.11 (matches local dev)
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: "3.11"
+      # 3️⃣  Merge the latest code from main
+      - name: Sync branch with main
+        run: |
+          git fetch origin main
+          git merge --no-edit origin/main
 
-    # 4️⃣  Install Poetry + project deps (no package build)
-    - name: Install dependencies (Poetry)
-      run: |
-        python -m pip install --upgrade pip poetry
-        poetry install --no-root
+      # 4️⃣  Set up Python 3.11
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
-    # 5️⃣  Pull DL + DCA queue times → Parquet
-    - name: Harvest queue‑time data
-      run: |
-        poetry run python ingest/pull_queue_times.py --park dl
-        poetry run python ingest/pull_queue_times.py --park dca
+      # 5️⃣  Install Poetry + deps (no package build)
+      - name: Install dependencies (Poetry)
+        run: |
+          python -m pip install --upgrade pip poetry
+          poetry install --no-root
 
-    # 6️⃣  Configure Git author
-    - name: Configure Git
-      run: |
-        git config user.name  "github-actions[bot]"
-        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      # 6️⃣  Harvest queue‑time data → Parquet
+      - name: Harvest queue‑time data
+        run: |
+          poetry run python ingest/pull_queue_times.py --park dl
+          poetry run python ingest/pull_queue_times.py --park dca
 
-    # 7️⃣  Commit only if new Parquet parts were added
-    - name: Commit data update (if any)
-      run: |
-        git add data/raw
-        git diff --cached --quiet && { echo "No new data – skipping commit"; exit 0; }
-        git commit -m "Add hourly Parquet parts: $(date -u +'%Y-%m-%d %H:%M:%S') UTC"
+      # 7️⃣  Commit only if new Parquet parts were added
+      - name: Commit data update (if any)
+        run: |
+          git add data/raw
+          git diff --cached --quiet && { echo "No new data – skipping commit"; exit 0; }
+          git commit -m "Add hourly Parquet parts: $(date -u +'%Y-%m-%d %H:%M:%S') UTC"
 
-    # 8️⃣  Rebase in case another job pushed, then push safely
-    - name: Rebase & push
-      run: |
-        git pull --rebase --autostash origin binary-db-updates
-        git push --force-with-lease origin HEAD:binary-db-updates
+      # 8️⃣  Rebase in case another job pushed, then push safely
+      - name: Rebase & push
+        run: |
+          git pull --rebase --autostash origin binary-db-updates
+          git push --force-with-lease origin HEAD:binary-db-updates
