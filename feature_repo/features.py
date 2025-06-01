@@ -1,6 +1,5 @@
-from feast import (
-    Entity, FeatureView, Field, FileSource, ParquetFormat
-)
+from feast import Entity, FeatureView, Field, FileSource
+from feat.file_format import ParquetFormat
 from feast.types import Float32, Int32
 from datetime import timedelta
 
