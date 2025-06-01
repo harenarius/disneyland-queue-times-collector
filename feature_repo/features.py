@@ -15,7 +15,6 @@ WEATHER_RAW = FileSource(
     name="weather_raw",
     path="../data/raw",          # same directory; we’ll filter later
     timestamp_field="timestamp",
-    file_format=queue_format,
 )
 
 ride = Entity(name="ride_id", join_keys=["ride_id"])
