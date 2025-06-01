@@ -53,7 +53,7 @@ jobs:
         run: |
           poetry run python ingest/pull_queue_times.py --park dl
           poetry run python ingest/pull_queue_times.py --park dca
-          poetry run python ingest/pull_weather.py pull
+          poetry run python ingest/pull_weather.py
 
       # 7️⃣  Commit new Parquet parts if any
       - name: Commit data update (if any)
