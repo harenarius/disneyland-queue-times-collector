@@ -32,7 +32,7 @@ jobs:
       - name: Sync branch with main
         run: |
           git fetch origin main
-          git merge --no-edit origin/main
+          git merge -X theirs --no-edit origin/main
 
       # 4️⃣ Debug: show workspace tree – verify ingest/pull_queue_times.py exists
       - name: Debug tree listing
