@@ -50,6 +50,8 @@ jobs:
 
       # 6️⃣  Harvest DL, DCA, and Weather → Parquet
       - name: Harvest queue-time & weather data
+        env:
+          OPENWEATHER_API_KEY: ${[ secrets.OPENWEATHER.API.KEY ]}
         run: |
           poetry run python ingest/pull_queue_times.py --park dl
           poetry run python ingest/pull_queue_times.py --park dca
