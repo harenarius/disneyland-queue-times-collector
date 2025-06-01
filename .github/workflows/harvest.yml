@@ -1,9 +1,10 @@
 name: Harvest Queue Times
 
 on:
+  # every 30 min while the parks are roughly open (cron = UTC)
   schedule:
-    - cron: "*/30 15-23 * * *"   # 08:00-15:30 PT
-    - cron: "*/30 0-6  * * *"    # 17:00-23:30 PT
+    - cron: "*/30 15-23 * * *"     # 08:00-15:30 PT
+    - cron: "*/30 0-6  * * *"      # 17:00-23:30 PT
   workflow_dispatch:
 
 concurrency:
@@ -15,67 +16,53 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Check out the branch that stores data blobs
+      # 1️⃣  Check out the data branch
       - name: Check out binary-db-updates
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
           ref: binary-db-updates
 
-      # 2️⃣ Configure Git author (needed for the merge commit below)
+      # 2️⃣  Configure Git author (needed for merge + commits)
       - name: Configure Git
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      # 3️⃣ Merge latest code from main → brings in pyproject.toml & ingest/
+      # 3️⃣  Merge the latest code from main
       - name: Sync branch with main
         run: |
           git fetch origin main
           git merge -X theirs --no-edit origin/main
 
-      # 4️⃣ Debug: show workspace tree – verify ingest/pull_queue_times.py exists
-      - name: Debug tree listing
-        run: |
-          echo "Top-level:"
-          ls -al
-          echo "-----------"
-          echo "ingest folder:"
-          ls -al ingest || true
-          echo "-----------"
-
-      # 5️⃣ Set up Python 3.11
+      # 4️⃣  Set up Python 3.11
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      # 6️⃣ Install Poetry via pip and add it to PATH
-      - name: Install Poetry
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install poetry
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
-
-      # 7️⃣ Install dependencies with Poetry (no package build)
+      # 5️⃣  Install Poetry and deps
       - name: Install dependencies
         run: |
-          python -m poetry install --no-root
+          python -m pip install --upgrade pip poetry
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          poetry install --no-root
 
-      # 8️⃣ Harvest DL & DCA queue times
-      - name: Harvest DL & DCA queue times
+      # 6️⃣  Harvest DL, DCA, and Weather → Parquet
+      - name: Harvest queue-time & weather data
         run: |
-          python -m poetry run python ingest/pull_queue_times.py --park dl
-          python -m poetry run python ingest/pull_queue_times.py --park dca
+          poetry run python ingest/pull_queue_times.py --park dl
+          poetry run python ingest/pull_queue_times.py --park dca
+          poetry run python ingest/pull_weather.py pull
 
-      # 9️⃣ Commit new Parquet parts if any
+      # 7️⃣  Commit new Parquet parts if any
       - name: Commit data update (if any)
         run: |
           git add data/raw
           git diff --cached --quiet && { echo "No new data – skipping commit"; exit 0; }
           git commit -m "Add hourly Parquet parts: $(date -u +'%Y-%m-%d %H:%M:%S') UTC"
 
-      # 🔟 Rebase & push safely
+      # 8️⃣  Rebase & push safely
       - name: Rebase & push
         run: |
           git pull --rebase --autostash origin binary-db-updates
