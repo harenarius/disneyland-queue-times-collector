@@ -14,7 +14,7 @@ jobs:
     - name: Check out code
       uses: actions/checkout@v3
       with:
-        fetch-depth: 0  # Enables rebase and full history
+        fetch-depth: 0  # REQUIRED: allows history for rebase
 
     - name: Set up Python
       uses: actions/setup-python@v5
@@ -29,25 +29,24 @@ jobs:
         OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
       run: python queue_times.py
 
-    - name: Configure Git
+    - name: Set up Git config
       run: |
         git config --global user.name "github-actions[bot]"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-    - name: Pull latest binary-db-updates with rebase
+    - name: Fetch & rebase binary-db-updates
       run: |
         git fetch origin binary-db-updates
         git checkout binary-db-updates || git checkout -b binary-db-updates
-        git pull origin binary-db-updates --rebase || echo "No rebase needed"
+        git rebase origin/binary-db-updates || echo "Nothing to rebase"
+
+    - name: Copy updated DB from main
+      run: git checkout main -- queue_times.db
 
     - name: Commit DB update
       run: |
         git add queue_times.db
         git commit -m "Update SQLite DB: $(date -u +'%Y-%m-%d %H:%M:%S') UTC" || echo "No changes to commit"
 
-    - name: Push updated DB to binary-db-updates branch
-      run: |
-        git push origin binary-db-updates || echo "Push failed"
-
-    - name: Retrain model if new data is present
-      run: python retrain_if_new_data.py
+    - name: Push updated DB
+      run: git push origin binary-db-updates || echo "Push failed"
