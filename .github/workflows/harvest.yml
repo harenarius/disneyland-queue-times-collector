@@ -20,9 +20,9 @@ jobs:
         python-version: '3.x'
 
     - name: Install dependencies
-      run: pip install requests python-dotenv
+      run: pip install requests python-dotenv pandas scikit-learn joblib
 
-    - name: Run script
+    - name: Run queue_times.py
       env:
         OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
       run: python queue_times.py
@@ -35,3 +35,6 @@ jobs:
         git add -f queue_times.db
         git commit -m "Update SQLite DB: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" || echo "No changes to commit"
         git push origin HEAD:binary-db-updates
+
+    - name: Retrain model if new data is present
+      run: python retrain_if_new_data.py
