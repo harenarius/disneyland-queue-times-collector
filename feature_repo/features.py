@@ -2,16 +2,20 @@ from feast import Entity, FeatureView, Field, FileSource
 from feast.types import Float32, Int32
 from datetime import timedelta
 
+queue_format = ParquetFormat(hive_partitioning=True)
+
 QUEUE_RAW = FileSource(
     name="queue_raw",
     path="../data/raw",          # ← just the directory
     timestamp_field="timestamp",
+    file_format=queue_format,
 )
 
 WEATHER_RAW = FileSource(
     name="weather_raw",
     path="../data/raw",          # same directory; we’ll filter later
     timestamp_field="timestamp",
+    file_format=queue_format,
 )
 
 ride = Entity(name="ride_id", join_keys=["ride_id"])
