@@ -1,7 +1,13 @@
+import glob, os
 from feast import Entity, FeatureView, Field, FileSource
-from feast.types import Float32, Int32          # ← keep these
+from feast.types import Float32, Int32
 from datetime import timedelta
 
+here = os.path.dirname(__file__)  # feature_repo/
+queue_files = glob.glob(
+    os.path.join(here, "..", "data", "raw", "*", "park=*",
+                 "*.parquet")
+    
 QUEUE_RAW = FileSource(
     name="queue_raw",
     path="../data/raw/*/park=*/*.parquet",
