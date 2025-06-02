@@ -1,43 +1,38 @@
-from feast import Entity, FeatureView, Field, FileSource
+from feast import Entity, FeatureView, Feature, FileSource      # ← Feature!
 from feast.types import Float32, Int32
 from datetime import timedelta
 
-# ── File sources ──────────────────────────────────────────────
 QUEUE_RAW = FileSource(
     name="queue_raw",
-    path="../data/raw/*/park=*/*.parquet",   # ✅ ride files only
+    path="../data/raw/*/park=*/*.parquet",
     timestamp_field="timestamp",
 )
 
-WEATHER_RAW = FileSource(
-    name="weather_raw",
-    path="../data/weather/weather_*.parquet",   # ✅ weather lives here now
-    timestamp_field="timestamp",
-)
-
-# ── entities ──────────────────────────────────────────────────
 ride = Entity(name="ride_id", join_keys=["ride_id"])
 
-# ── feature views ─────────────────────────────────────────────
-# 1) ride-only view
 queue_hourly = FeatureView(
     name="queue_hourly",
     entities=[ride],
-    ttl=None,                           # disable TTL until tz issues solved
-    schema=[Field("posted_wait", Int32)],
+    ttl=None,
+    schema=[
+        Feature(name="posted_wait", dtype=Int32),    # ← use Feature
+    ],
     online=False,
     source=QUEUE_RAW,
 )
 
-# 2) standalone weather view (one row per timestamp)
 weather_hourly = FeatureView(
     name="weather_hourly",
-    entities=[],                        # no ride_id
+    entities=[],            # no ride_id column
     ttl=None,
     schema=[
-        Field("temp_f",      Float32),
-        Field("precip_prob", Int32),
+        Feature(name="temp_f",      dtype=Float32),
+        Feature(name="precip_prob", dtype=Int32),
     ],
     online=False,
-    source=WEATHER_RAW,
+    source=FileSource(
+        name="weather_raw",
+        path="../data/weather/weather_*.parquet",
+        timestamp_field="timestamp",
+    ),
 )
