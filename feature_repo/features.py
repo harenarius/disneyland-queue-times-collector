@@ -1,47 +1,39 @@
+from feast import Entity, FeatureView, Field, FileSource
+from feast.types import Float32, Int32          # ← keep these
 from datetime import timedelta
 
-from feast import Entity, FeatureView, Field, FileSource, ValueType
-
-# ── File sources ──────────────────────────────────────────────
 QUEUE_RAW = FileSource(
     name="queue_raw",
-    path="../data/raw/*/park=*/*.parquet",     # ride-wait parts only
+    path="../data/raw/*/park=*/*.parquet",
     timestamp_field="timestamp",
 )
 
 WEATHER_RAW = FileSource(
     name="weather_raw",
-    path="../data/weather/weather_*.parquet",  # weather files
+    path="../data/weather/weather_*.parquet",
     timestamp_field="timestamp",
 )
 
-# ── entity ────────────────────────────────────────────────────
-ride = Entity(
-    name="ride_id",
-    join_keys=["ride_id"],
-    value_type=ValueType.INT32,                # required in newer Feast
-)
+ride = Entity(name="ride_id", join_keys=["ride_id"])
 
-# ── ride-wait FeatureView (posted_wait only) ──────────────────
 queue_hourly = FeatureView(
     name="queue_hourly",
     entities=[ride],
-    ttl=None,                                  # disable until tz cleaned
+    ttl=None,
     schema=[
-        Field(name="posted_wait", dtype=ValueType.INT32),
+        Field(name="posted_wait", dtype=Int32),      # ✅ Int32, not ValueType
     ],
     online=False,
     source=QUEUE_RAW,
 )
 
-# ── weather FeatureView (no ride_id) ──────────────────────────
 weather_hourly = FeatureView(
     name="weather_hourly",
-    entities=[],                               # global features
+    entities=[],            # no ride_id
     ttl=None,
     schema=[
-        Field(name="temp_f",      dtype=ValueType.FLOAT),
-        Field(name="precip_prob", dtype=ValueType.INT32),
+        Field(name="temp_f",      dtype=Float32),    # ✅ Float32
+        Field(name="precip_prob", dtype=Int32),
     ],
     online=False,
     source=WEATHER_RAW,
