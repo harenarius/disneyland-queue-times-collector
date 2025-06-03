@@ -1,52 +1,74 @@
-# jobs/daily_rollup.py
+# jobs/30min_rollup.py
 """
-Merge yesterday’s hourly queue-time + weather rows into one day-level table.
+Aggregate ride wait time + weather data into 30-minute intervals.
+Outputs per-ride, per-day, per-30min stats into data/rollup/YYYY-MM-DD.parquet
+"""
 
-Output: data/interim/daily.parquet   (partition-friendly for future use)
-"""
 from pathlib import Path
-
 import pandas as pd
+import holidays
 
 RAW = Path("data/raw")
-OUT = Path("data/interim")
+WEATHER = Path("data/weather")
+META = Path("data/meta/rides.parquet")
+OUT = Path("data/rollup")
 OUT.mkdir(parents=True, exist_ok=True)
 
+US_HOLIDAYS = holidays.US()
 
 def build():
-    # ––– load yesterday’s raw parts –––
-    yesterday = (pd.Timestamp.utcnow() - pd.Timedelta("1D")).strftime("%Y-%m-%d")
-    q_parts = list(RAW.glob(f"{yesterday}.parquet/park=*/part*.parquet"))
-    w_parts = list(RAW.glob(f"weather_{yesterday}.parquet"))
+    # Get yesterday's date
+    date = (pd.Timestamp.utcnow() - pd.Timedelta("1D")).date()
+    day_str = date.strftime("%Y-%m-%d")
 
-    if not q_parts or not w_parts:
-        print("No raw files for", yesterday)
+    # Load ride wait time parts
+    q_parts = list(RAW.glob(f"{day_str}.parquet/park=*/part*.parquet"))
+    if not q_parts:
+        print("No queue data found.")
         return
-
     qdf = pd.concat(pd.read_parquet(p) for p in q_parts)
-    wdf = pd.concat(pd.read_parquet(p) for p in w_parts)
-
-    # ––– aggregate queue times –––
+    qdf["timestamp"] = pd.to_datetime(qdf["timestamp"])
+    qdf["time_bin"] = qdf["timestamp"].dt.floor("30T")
     qdf["date"] = qdf["timestamp"].dt.date
-    daily = (
-        qdf.groupby(["ride_id", "date"])["posted_wait"]
-        .agg(mean_wait="mean", p90_wait=lambda s: s.quantile(0.9))
+
+    # Aggregate to 30-min bins
+    ride_summary = (
+        qdf.groupby(["date", "park", "ride_id", "ride_name", "time_bin"])
+        .agg(
+            wait_mean=("wait_time", "mean"),
+            wait_std=("wait_time", "std"),
+            sample_size=("wait_time", "count"),
+        )
         .reset_index()
     )
 
-    # ––– aggregate weather –––
-    wdf["date"] = wdf["timestamp"].dt.date
-    w_day = (
-        wdf.groupby("date")
-        .agg(high_temp=("temp_f", "max"), max_precip_prob=("precip_prob", "max"))
-        .reset_index()
-    )
+    # Load weather
+    weather_path = WEATHER / f"weather_{day_str}.parquet"
+    if not weather_path.exists():
+        print("No weather file found.")
+        return
+    wdf = pd.read_parquet(weather_path)
+    latest_weather = wdf.sort_values("timestamp").iloc[-1:]
 
-    out = daily.merge(w_day, on="date", how="left")
-    out_path = OUT / "daily.parquet"
-    out.to_parquet(out_path, index=False)
-    print("✅ wrote", len(out), "rows →", out_path)
+    # Broadcast weather to all rows
+    for col in ["temp_f", "precip_prob", "humidity", "wind_speed"]:
+        ride_summary[col] = latest_weather.iloc[0][col]
 
+    # Add holiday, day of week, weekend
+    ride_summary["is_holiday"] = ride_summary["date"].isin(US_HOLIDAYS)
+    ride_summary["day_of_week"] = pd.to_datetime(ride_summary["date"]).dt.day_name()
+    ride_summary["is_weekend"] = ride_summary["day_of_week"].isin(["Saturday", "Sunday"])
+
+    # Join with ride metadata (if available)
+    meta_path = META
+    if meta_path.exists():
+        metadata = pd.read_parquet(meta_path)
+        ride_summary = ride_summary.merge(metadata, on="ride_id", how="left")
+
+    # Save
+    out_path = OUT / f"{day_str}.parquet"
+    ride_summary.to_parquet(out_path, index=False)
+    print(f"✅ Wrote {len(ride_summary)} rows to {out_path}")
 
 if __name__ == "__main__":
     build()

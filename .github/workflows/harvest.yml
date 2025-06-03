@@ -16,12 +16,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣  Check out the data branch
-      - name: Check out binary-db-updates
+      # 1️⃣  Check out the correct branch dynamically
+      - name: Check out current branch
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-          ref: binary-db-updates
+          ref: ${{ github.ref_name }}
 
       # 2️⃣  Configure Git author (needed for merge + commits)
       - name: Configure Git
@@ -67,5 +67,5 @@ jobs:
       # 8️⃣  Rebase & push safely
       - name: Rebase & push
         run: |
-          git pull --rebase --autostash origin binary-db-updates
-          git push --force-with-lease origin HEAD:binary-db-updates
+          git pull --rebase --autostash origin ${{ github.ref_name }}
+          git push --force-with-lease origin HEAD:${{ github.ref_name }}

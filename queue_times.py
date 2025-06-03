@@ -1,22 +1,29 @@
 import os
 import sqlite3
+import sys
 from datetime import date, datetime
 
 import holidays
 import requests
 from dotenv import load_dotenv
 
-# Load .env variables
-load_dotenv()
-
-# Settings
-PARKS = {"disneyland": 16, "california_adventure": 17}
+# ------------------------------------------------------------------------------
+# Configuration
+# ------------------------------------------------------------------------------
 DB_NAME = "queue_times.db"
+PARKS = {"disneyland": 16, "california_adventure": 17}
 WEATHER_URL = "https://api.openweathermap.org/data/2.5/weather"
-API_KEY = os.getenv("OPENWEATHER_API_KEY")
 LOCATION = {"lat": 33.8121, "lon": -117.9190}  # Anaheim, CA
 
-# Holiday check
+# Load .env variables safely
+load_dotenv()
+API_KEY = os.getenv("OPENWEATHER_API_KEY")
+if not API_KEY:
+    print("[WARNING] OPENWEATHER_API_KEY not found in environment. Weather data will fail.")
+
+# ------------------------------------------------------------------------------
+# Helpers
+# ------------------------------------------------------------------------------
 us_holidays = holidays.US()
 today = date.today()
 is_today_holiday = today in us_holidays
@@ -25,8 +32,14 @@ holiday_name = us_holidays.get(today) if is_today_holiday else None
 
 def fetch_ride_data(park_name, park_id):
     url = f"https://queue-times.com/parks/{park_id}/queue_times.json"
-    response = requests.get(url)
-    data = response.json()
+    try:
+        response = requests.get(url, timeout=15)
+        response.raise_for_status()
+        data = response.json()
+    except Exception as e:
+        print(f"[ERROR] Could not fetch ride data for {park_name}: {e}")
+        return []
+
     timestamp = datetime.now().isoformat()
     output = []
     for land in data.get("lands", []):
@@ -45,23 +58,34 @@ def fetch_ride_data(park_name, park_id):
 
 
 def fetch_weather_data():
+    if not API_KEY:
+        return None
+
     params = {
         "lat": LOCATION["lat"],
         "lon": LOCATION["lon"],
         "appid": API_KEY,
         "units": "imperial",
     }
-    response = requests.get(WEATHER_URL, params=params)
-    data = response.json()
-    return (
-        datetime.now().isoformat(),
-        data["weather"][0]["main"],
-        data["main"]["temp"],
-        data["main"]["humidity"],
-        data["wind"]["speed"],
-    )
+    try:
+        response = requests.get(WEATHER_URL, params=params, timeout=15)
+        response.raise_for_status()
+        data = response.json()
+        return (
+            datetime.now().isoformat(),
+            data["weather"][0]["main"],
+            data["main"]["temp"],
+            data["main"]["humidity"],
+            data["wind"]["speed"],
+        )
+    except Exception as e:
+        print(f"[ERROR] Could not fetch weather data: {e}")
+        return None
 
 
+# ------------------------------------------------------------------------------
+# Database Operations
+# ------------------------------------------------------------------------------
 def create_tables(conn):
     conn.execute(
         """
@@ -99,23 +123,26 @@ def create_tables(conn):
 
 
 def insert_ride_data(conn, ride_data):
-    conn.executemany(
-        """
-        INSERT INTO queue_times (timestamp, park, land, ride, wait_time, is_holiday)
-        VALUES (?, ?, ?, ?, ?, ?)
-    """,
-        ride_data,
-    )
+    if ride_data:
+        conn.executemany(
+            """
+            INSERT INTO queue_times (timestamp, park, land, ride, wait_time, is_holiday)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """,
+            ride_data,
+        )
 
 
 def insert_weather_data(conn, weather_row):
-    conn.execute(
-        """
-        INSERT OR IGNORE INTO weather (timestamp, condition, temperature, humidity, wind_speed)
-        VALUES (?, ?, ?, ?, ?)
-    """,
-        weather_row,
-    )
+    if weather_row:
+        conn.execute(
+            """
+            INSERT OR IGNORE INTO weather
+            (timestamp, condition, temperature, humidity, wind_speed)
+            VALUES (?, ?, ?, ?, ?)
+        """,
+            weather_row,
+        )
 
 
 def insert_holiday(conn):
@@ -129,30 +156,42 @@ def insert_holiday(conn):
         )
 
 
+# ------------------------------------------------------------------------------
+# Main
+# ------------------------------------------------------------------------------
 def main():
-    conn = sqlite3.connect(DB_NAME)
-    create_tables(conn)
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        create_tables(conn)
 
-    # Insert holiday metadata
-    insert_holiday(conn)
+        insert_holiday(conn)
 
-    # Pull and insert ride data
-    all_ride_data = []
-    for park_name, park_id in PARKS.items():
-        park_data = fetch_ride_data(park_name, park_id)
-        all_ride_data.extend(park_data)
-    insert_ride_data(conn, all_ride_data)
+        all_ride_data = []
+        for park_name, park_id in PARKS.items():
+            park_data = fetch_ride_data(park_name, park_id)
+            all_ride_data.extend(park_data)
+        insert_ride_data(conn, all_ride_data)
 
-    # Pull and insert weather data
-    weather = fetch_weather_data()
-    insert_weather_data(conn, weather)
+        weather = fetch_weather_data()
+        insert_weather_data(conn, weather)
 
-    conn.commit()
-    conn.close()
+        conn.commit()
 
-    print(f"Inserted {len(all_ride_data)} ride rows and 1 weather row into {DB_NAME}")
-    if is_today_holiday:
-        print(f"Marked today as a holiday: {holiday_name}")
+        print(f"[INFO] {len(all_ride_data)} ride rows inserted.")
+        if weather:
+            print("[INFO] 1 weather row inserted.")
+        if is_today_holiday:
+            print(f"[INFO] Holiday recorded: {holiday_name}")
+        print(f"[INFO] Data written to {DB_NAME}")
+
+    except Exception as e:
+        print(f"[CRITICAL] Script failed: {e}")
+        sys.exit(1)
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
 
 
 if __name__ == "__main__":

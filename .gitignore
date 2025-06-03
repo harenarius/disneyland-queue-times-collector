@@ -196,3 +196,8 @@ cython_debug/
 create_*py
 retrain_*py
 requirements*Add
+
+# macOS Finder
+*.DS_Store
+=======
+
