@@ -60,19 +60,22 @@ def build():
         .reset_index()
     )
 
-    # --- Load weather data ---
+    # --- Load weather data (optional) ---
     weather_path = WEATHER / f"weather_{day_str}.parquet"
-    if not weather_path.exists():
-        print(f"No weather file found for {day_str}")
-        return
-    wdf = pd.read_parquet(weather_path)
-    latest = wdf.sort_values("timestamp").iloc[-1]
-    for col in ["temp_f", "precip_prob", "humidity", "wind_speed"]:
-        if col in latest:
-            grouped[col] = latest[col]
-        else:
-            print(f"[WARN] '{col}' not found in weather file for {day_str}")
-            grouped[col] = None  # or grouped[col] = pd.NA
+    if weather_path.exists():
+        try:
+            wdf = pd.read_parquet(weather_path)
+            latest = wdf.sort_values("timestamp").iloc[-1]
+            for col in ["temp_f", "precip_prob", "humidity", "wind_speed"]:
+                grouped[col] = latest[col] if col in latest else None
+        except Exception as e:
+            print(f"[WARN] Failed to read or parse weather file: {e}")
+            for col in ["temp_f", "precip_prob", "humidity", "wind_speed"]:
+                grouped[col] = None
+    else:
+        print(f"[WARN] No weather file found for {day_str}, filling with nulls")
+        for col in ["temp_f", "precip_prob", "humidity", "wind_speed"]:
+            grouped[col] = None
 
     # --- Add holiday and day flags ---
     grouped["is_holiday"] = grouped["date"].isin(US_HOLIDAYS)
