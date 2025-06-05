@@ -201,3 +201,5 @@ requirements*Add
 *.DS_Store
 =======
 
+data/raw/
+data/rollup/
