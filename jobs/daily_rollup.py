@@ -25,17 +25,33 @@ def build():
     raw_path = RAW / f"{day_str}.parquet"
 
     # --- Load ride data ---
-    queue_files = list(raw_path.rglob("*.parquet"))
+    queue_files = [p for p in raw_path.rglob("*.parquet") if p.is_file()]
     if not queue_files:
         print(f"No queue data found for {day_str}")
         return
-    qdf = pd.concat(pd.read_parquet(p) for p in queue_files)
+
+    dfs = []
+    for p in queue_files:
+        try:
+            df = pd.read_parquet(p)
+            df.columns = [str(c) for c in df.columns]  # normalize all column names to string
+            if "park" in df.columns:
+                df["park"] = df["park"].astype(str)     # normalize park type
+            dfs.append(df)
+        except Exception as e:
+            print(f"[WARN] Failed to read {p.name}: {e}")
+
+    if not dfs:
+        print(f"[ERROR] No readable data found in {raw_path}")
+        return
+
+    qdf = pd.concat(dfs, ignore_index=True)
     qdf["timestamp"] = pd.to_datetime(qdf["timestamp"])
     qdf["time_bin"] = qdf["timestamp"].dt.floor("30min")
     qdf["date"] = qdf["timestamp"].dt.date
 
     grouped = (
-        qdf.groupby(["date", "park", "ride_id", "ride_name", "time_bin"])
+        qdf.groupby(["date", "park", "ride", "time_bin"])
         .agg(
             wait_mean=("wait_time", "mean"),
             wait_std=("wait_time", "std"),
@@ -52,7 +68,11 @@ def build():
     wdf = pd.read_parquet(weather_path)
     latest = wdf.sort_values("timestamp").iloc[-1]
     for col in ["temp_f", "precip_prob", "humidity", "wind_speed"]:
-        grouped[col] = latest[col]
+        if col in latest:
+            grouped[col] = latest[col]
+        else:
+            print(f"[WARN] '{col}' not found in weather file for {day_str}")
+            grouped[col] = None  # or grouped[col] = pd.NA
 
     # --- Add holiday and day flags ---
     grouped["is_holiday"] = grouped["date"].isin(US_HOLIDAYS)
@@ -62,7 +82,7 @@ def build():
     # --- Optional ride metadata ---
     if META.exists():
         meta = pd.read_parquet(META)
-        grouped = grouped.merge(meta, on="ride_id", how="left")
+        grouped = grouped.merge(meta, on="ride", how="left")
 
     # --- Save output ---
     out_path = OUT / f"{day_str}.parquet"
