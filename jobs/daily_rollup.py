@@ -87,6 +87,10 @@ def build():
         meta = pd.read_parquet(META)
         grouped = grouped.merge(meta, on="ride", how="left")
 
+        daily_summary["total_ride_tolerance"] = meta["riders_hour_max"].sum()
+
+    grouped["estimated_throughput"] = grouped["sample_size"] * 10
+
     # --- Save output ---
     out_path = OUT / f"{day_str}.parquet"
     grouped.to_parquet(out_path, index=False)
