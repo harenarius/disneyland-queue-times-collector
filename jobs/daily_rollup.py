@@ -34,9 +34,9 @@ def build():
     for p in queue_files:
         try:
             df = pd.read_parquet(p)
-            df.columns = [str(c) for c in df.columns]  # normalize all column names to string
+            df.columns = [str(c) for c in df.columns]
             if "park" in df.columns:
-                df["park"] = df["park"].astype(str)     # normalize park type
+                df["park"] = df["park"].astype(str)
             dfs.append(df)
         except Exception as e:
             print(f"[WARN] Failed to read {p.name}: {e}")
@@ -66,8 +66,16 @@ def build():
         try:
             wdf = pd.read_parquet(weather_path)
             latest = wdf.sort_values("timestamp").iloc[-1]
-            for col in ["temp_f", "precip_prob", "humidity", "wind_speed"]:
-                grouped[col] = latest[col] if col in latest else None
+
+            column_map = {
+                "temperature": "temp_f",
+                "humidity": "humidity",
+                "wind_speed": "wind_speed",
+                "precip_prob": "precip_prob"
+            }
+
+            for src, dest in column_map.items():
+                grouped[dest] = latest[src] if src in latest else None
         except Exception as e:
             print(f"[WARN] Failed to read or parse weather file: {e}")
             for col in ["temp_f", "precip_prob", "humidity", "wind_speed"]:
@@ -86,8 +94,6 @@ def build():
     if META.exists():
         meta = pd.read_parquet(META)
         grouped = grouped.merge(meta, on="ride", how="left")
-
-        daily_summary["total_ride_tolerance"] = meta["riders_hour_max"].sum()
 
     grouped["estimated_throughput"] = grouped["sample_size"] * 10
 
