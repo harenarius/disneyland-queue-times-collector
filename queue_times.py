@@ -161,25 +161,41 @@ def insert_holiday(conn):
 # ------------------------------------------------------------------------------
 def main():
     try:
+        failure_detected = False
         conn = sqlite3.connect(DB_NAME)
         create_tables(conn)
 
         insert_holiday(conn)
 
+        print("[DEBUG] Using park IDs:", PARKS)
+
         all_ride_data = []
         for park_name, park_id in PARKS.items():
             park_data = fetch_ride_data(park_name, park_id)
+            if not park_data:
+                print(f"[ERROR] No ride data returned for {park_name}")
+                failure_detected = True
             all_ride_data.extend(park_data)
         insert_ride_data(conn, all_ride_data)
 
         weather = fetch_weather_data()
+        if weather is None:
+            print("[ERROR] Weather data fetch failed")
+            failure_detected = True
         insert_weather_data(conn, weather)
+
+        if failure_detected:
+            os.makedirs("logs", exist_ok=True)
+            with open("logs/harvest_failures.log", "a") as f:
+                f.write(f"[{datetime.now().isoformat()}] Data fetch failure detected.\n")
 
         conn.commit()
 
         print(f"[INFO] {len(all_ride_data)} ride rows inserted.")
         if weather:
             print("[INFO] 1 weather row inserted.")
+        else:
+            print("[WARN] No weather data was fetched.")
         if is_today_holiday:
             print(f"[INFO] Holiday recorded: {holiday_name}")
         print(f"[INFO] Data written to {DB_NAME}")
