@@ -26,3 +26,7 @@ jobs:
       - name: Run export
         run: |
           poetry run python scripts/export_queue_to_parquet.py
+    
+      - name: Export weather
+        run: |
+          poetry run python scripts/export_weather_to_parquet.py
