@@ -1,0 +1,28 @@
+name: Export Queue To Parquet
+
+on:
+  schedule:
+    - cron: "20 7 * * *"  # 12:20 AM PT = 07:20 UTC
+  workflow_dispatch:
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip poetry
+          poetry install --no-root
+
+      - name: Run export
+        run: |
+          poetry run python scripts/export_queue_to_parquet.py
