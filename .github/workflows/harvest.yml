@@ -56,7 +56,7 @@ jobs:
       # 7️⃣  Commit new Parquet parts if any
       - name: Commit data update (if any)
         run: |
-          git add data/raw
+          git add -f data/raw
           git diff --cached --quiet && { echo "No new data – skipping commit"; exit 0; }
           git commit -m "Add hourly Parquet parts: $(date -u +'%Y-%m-%d %H:%M:%S') UTC"
           git push --force-with-lease origin HEAD:${{ github.ref_name}}
