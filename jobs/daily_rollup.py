@@ -22,7 +22,7 @@ def build():
 
     # --- Load ride data from S3 ---
     raw_path = f"{RAW}/{day_str}.parquet/"
-    queue_files = fsspec.open_files(f"{raw_path}*.parquet")
+    queue_files = fsspec.open_files(f"{raw_path}park=*/*.parquet")
 
     if not queue_files:
         print(f"No queue data found for {day_str}")
