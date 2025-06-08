@@ -35,8 +35,10 @@ def build():
         try:
             df = pd.read_parquet(p)
             df.columns = [str(c) for c in df.columns]
-            if "park" in df.columns:
-                df["park"] = df["park"].astype(str)
+            if not {"park", "ride", "wait_time", "timestamp"}.issubset(df.columns):
+                print(f"[WARN] Skipping {p.name} — missing required columns")
+                continue
+            df["park"] = df["park"].astype(str)
             dfs.append(df)
         except Exception as e:
             print(f"[WARN] Failed to read {p.name}: {e}")
