@@ -22,6 +22,9 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ github.ref_name }}
+          
+      - name: Log UTC time
+        run: echo "Harvest started at $(date -u)"
 
       # 2️⃣  Configure Git author (needed for merge + commits)
       - name: Configure Git
