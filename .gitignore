@@ -201,5 +201,6 @@ requirements*Add
 *.DS_Store
 =======
 
+.env
 data/raw/
 data/rollup/
