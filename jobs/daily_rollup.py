@@ -1,17 +1,14 @@
 # jobs/daily_rollup.py
-"""
-Aggregate queue wait times and weather into 30-minute ride-level summaries.
-Output: data/rollup/YYYY-MM-DD.parquet
-"""
 
 from pathlib import Path
 from datetime import datetime, timedelta
 import pandas as pd
 import holidays
+import fsspec
 
 # --- Paths ---
-RAW = Path("data/raw")
-WEATHER = Path("data/weather")
+RAW = "s3://disney-queue-times/raw"
+WEATHER = "s3://disney-queue-times/weather"
 META = Path("data/meta/rides.parquet")
 OUT = Path("data/rollup")
 OUT.mkdir(parents=True, exist_ok=True)
@@ -22,26 +19,28 @@ US_HOLIDAYS = holidays.US()
 def build():
     date = (datetime.utcnow() - timedelta(days=1)).date()
     day_str = date.strftime("%Y-%m-%d")
-    raw_path = RAW / f"{day_str}.parquet"
 
-    # --- Load ride data ---
-    queue_files = [p for p in raw_path.rglob("*.parquet") if p.is_file()]
+    # --- Load ride data from S3 ---
+    raw_path = f"{RAW}/{day_str}.parquet/"
+    queue_files = fsspec.open_files(f"{raw_path}*.parquet")
+
     if not queue_files:
         print(f"No queue data found for {day_str}")
         return
 
     dfs = []
-    for p in queue_files:
+    for f in queue_files:
         try:
-            df = pd.read_parquet(p)
-            df.columns = [str(c) for c in df.columns]
-            if not {"park", "ride", "wait_time", "timestamp"}.issubset(df.columns):
-                print(f"[WARN] Skipping {p.name} — missing required columns")
-                continue
-            df["park"] = df["park"].astype(str)
-            dfs.append(df)
+            with f.open() as file:
+                df = pd.read_parquet(file)
+                df.columns = [str(c) for c in df.columns]
+                if {"park", "ride", "wait_time", "timestamp"}.issubset(df.columns):
+                    df["park"] = df["park"].astype(str)
+                    dfs.append(df)
+                else:
+                    print(f"[WARN] Skipping {f.path} — missing required columns")
         except Exception as e:
-            print(f"[WARN] Failed to read {p.name}: {e}")
+            print(f"[WARN] Failed to read {f.path}: {e}")
 
     if not dfs:
         print(f"[ERROR] No readable data found in {raw_path}")
@@ -62,20 +61,19 @@ def build():
         .reset_index()
     )
 
-    # --- Load weather data (optional) ---
-    weather_path = WEATHER / f"weather_{day_str}.parquet"
-    if weather_path.exists():
+    # --- Load weather data from S3 ---
+    weather_path = f"{WEATHER}/weather_{day_str}.parquet"
+    fs = fsspec.filesystem("s3")
+    if fs.exists(weather_path):
         try:
             wdf = pd.read_parquet(weather_path)
             latest = wdf.sort_values("timestamp").iloc[-1]
-
             column_map = {
                 "temperature": "temp_f",
                 "humidity": "humidity",
                 "wind_speed": "wind_speed",
                 "precip_prob": "precip_prob"
             }
-
             for src, dest in column_map.items():
                 grouped[dest] = latest[src] if src in latest else None
         except Exception as e:
